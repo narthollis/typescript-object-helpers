@@ -1,0 +1,27 @@
+{
+  "name": "typescript-object-helpers",
+  "version": "1.0.0",
+  "author": {
+    "email": "narthollis+toh@narthollis.net",
+    "name": "Nicholas Steicke",
+    "url": "https://narthollis.net/"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^23.3.9",
+    "jest": "^23.6.0",
+    "jest-cli": "^23.6.0",
+    "resolve-types": "^0.2.0",
+    "ts-jest": "^23.10.5",
+    "ts-node": "^7.0.1",
+    "typescript": "3.2.0-rc"
+  },
+  "dependencies": {},
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@src/(.*)$": "<rootDir>/src/$1"
+    }
+  }
+}
