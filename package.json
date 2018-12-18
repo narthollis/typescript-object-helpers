@@ -6,6 +6,10 @@
     "name": "Nicholas Steicke",
     "url": "https://narthollis.net/"
   },
+  "scripts": {
+    "test": "jest",
+    "cover": "jest --coverage"
+  },
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "^23.3.9",
