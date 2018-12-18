@@ -2,30 +2,18 @@ import { keyInObject } from './helpers';
 
 export const GET: unique symbol = Symbol('OptionalResolve');
 
-interface OptionalLeafNoConflict<T, TOptional> {
+interface OptionalLeaf<T, TOptional> {
     [GET](defaultValue: T): Exclude<T, undefined | null | void>;
     [GET](): T | TOptional;
 }
 
-interface OptionalLeaf<T, TOptional> extends OptionalLeafNoConflict<T, TOptional> {
-    // resolve(defaultValue: T): Exclude<T, undefined | null | void>;
-    // resolve(): T | TOptional;
-}
+type OptionalNode<T, TOptional> = OptionalLeaf<T, TOptional> & MapOptionalProxy<T, TOptional>;
 
-type OptionalLeafNoConflictPicker<T, TOptional> = T extends { resolve: any }
-    ? OptionalLeafNoConflict<T, TOptional>
-    : OptionalLeaf<T, TOptional>;
-
-type OptionalNode<T, TOptional> = OptionalLeafNoConflictPicker<T, TOptional> & MapOptionalProxy<T, TOptional>;
-
-type OptionalProxy<T, TOptional> =
+type OptionalProxy<T, TOptional> = (
     T extends undefined
         ? never
-        : (
-            T extends object
-            ? OptionalNode<T, TOptional>
-            : OptionalLeafNoConflictPicker<T, TOptional>
-        );
+        : (T extends object ? OptionalNode<T, TOptional> : OptionalLeaf<T, TOptional>)
+    );
 
 type IsOptional<T> = T extends undefined ? undefined : never;
 
@@ -40,10 +28,8 @@ function internalResolver<TValue, TBase, TOptional extends undefined | never>(
     const p = [...path];
     let cur: any = base;
     while (p.length > 0 && cur != null) {
-        const index = p.shift();
-        if (index == null) {
-            break;
-        }
+        const index = p[0];
+        p.shift();
 
         if (keyInObject(cur, index)) {
             cur = cur[index];
@@ -64,7 +50,7 @@ function resolver<TValue, TBase, TOptional extends undefined | never>(
     path: Array<string | number | Symbol>
 ): (v?: TValue) => TValue | void {
     if (base == null) {
-        return (value?: TValue) => value != null ? value : undefined;
+        return (value?: TValue) => value;
     }
 
     return (value?: TValue) => {
@@ -86,10 +72,6 @@ function optionalBuilder<T extends object, TBase extends object, TOptional>(
     const proxy = new Proxy(base || RAW, {
         get(target: T, prop, receiver) {
             if (prop === GET) {
-                if (target === RAW) {
-                    return () => undefined;
-                }
-
                 return resolver(base, path);
             }
 
@@ -106,10 +88,10 @@ export function optional<T extends object>(base: T): OptionalProxy<T, IsOptional
     return optionalBuilder(base);
 }
 
-export function resolve<T>(opt: OptionalLeafNoConflict<T, undefined>, defaultValue: T): T;
-export function resolve<T>(opt: OptionalLeafNoConflict<T, never>, defaultValue?: T): T;
-export function resolve<T>(opt: OptionalLeafNoConflict<T, undefined>, defaultValue?: T): T | undefined;
-export function resolve<T, TOptional extends undefined | never>(opt: OptionalLeafNoConflict<T, TOptional>, defaultValue?: T): T | TOptional {
+export function resolve<T>(opt: OptionalLeaf<T, undefined>, defaultValue: T): T;
+export function resolve<T>(opt: OptionalLeaf<T, never>, defaultValue?: T): T;
+export function resolve<T>(opt: OptionalLeaf<T, undefined>, defaultValue?: T): T | undefined;
+export function resolve<T, TOptional extends undefined | never>(opt: OptionalLeaf<T, TOptional>, defaultValue?: T): T | TOptional {
     if (defaultValue) {
         return opt[GET](defaultValue);
     }
